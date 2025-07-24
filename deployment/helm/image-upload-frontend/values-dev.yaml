@@ -1,0 +1,5 @@
+# Override the configFilePath in values.yaml
+# when you want to deploy to dev env, remember order matters
+# helm install my-release my-chart -f values.yaml -f values-dev.yaml
+configFilePath: config-dev/
+clusterEnv: stage

@@ -1,0 +1,50 @@
+#This is required for dev env because I have problem to produce nodejs image in my local due to M1 cpu issue with podman 
+{{- if eq .Values.clusterEnv "stage" }}
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    {{- include "image-upload-frontend.frontend.labels" . | nindent 4 }}
+  name: {{ include "image-upload-frontend.frontend.fullname" . }}
+spec:
+  failedBuildsHistoryLimit: 5
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ include "image-upload-frontend.frontend.fullname" . }}:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    contextDir: {{ .Values.frontend.git.contextDir }}
+    git:
+      ref: {{ .Values.frontend.git.ref }}
+      uri: {{ .Values.frontend.git.url }}
+    sourceSecret:
+      name: {{ .Values.frontend.nameOverride }}-{{ .Values.frontend.git.sourceSecretSuffix }}
+    type: Git
+  strategy:
+    dockerStrategy:
+      dockerfilePath: {{ .Values.frontend.git.dockerfilePath }}
+      # For dockerStrategy, the following would override you baseimage
+      # This leads to problem if you have two stage build, it would override both baseimag
+      # from:
+        # kind: ImageStreamTag
+        # name: nodejs:20-ubi8
+        # namespace: openshift
+    type: Docker
+  successfulBuildsHistoryLimit: 5
+  triggers:
+  - imageChange: {}
+    type: ImageChange
+  - type: ConfigChange
+---
+apiVersion: v1
+data:
+  .gitconfig: IyBUaGlzIGlzIEdpdCdzIHBlci11c2VyIGNvbmZpZ3VyYXRpb24gZmlsZS4KW3VzZXJdCiMgUGxlYXNlIGFkYXB0IGFuZCB1bmNvbW1lbnQgdGhlIGZvbGxvd2luZyBsaW5lczoKCW5hbWUgPSBSeWFuIFpoYW5nCgllbWFpbCA9IHJ5YW4uemhhbmdjaGVuZ0BnbWFpbC5jb20KW2h0dHBdCglzc2xWZXJpZnkgPSBmYWxzZQo=
+kind: Secret
+metadata:
+  name: {{ .Values.frontend.nameOverride }}-{{ .Values.frontend.git.sourceSecretSuffix }}
+type: Opaque
+{{- end }}

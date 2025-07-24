@@ -1,0 +1,102 @@
+# Default values for image-upload.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+configFilePath: config/
+frontend:
+  name: spa
+  # This will mark the pod correct runtime icon
+  runtime: nodejs
+  replicaCount: 1
+  git:
+    url: https://github.com/ryanzhang/image-upload-frontend
+    ref: main
+    contextDir: /
+    sourceSecretSuffix: build-secret
+    dockerfilePath: Containerfile
+  image: 
+    repository: quay.io/rzhang/image-upload-frontend
+    imageStreamName: image-upload-frontend
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "v1.7"
+
+  imagePullSecrets: []
+  # deployment名字来源 .ChartName + nameOverride 在_helpers内定义
+  nameOverride: "spa"
+  fullnameOverride: ""
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Automatically mount a ServiceAccount's API credentials?
+    automount: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  podAnnotations: {}
+  podLabels: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  # Additional volumeMounts on the output Deployment definition.
+  env: {}
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  ingress:
+    enabled: true
+    annotations: {}
+    host:  # Leave blank to auto-generate the host using the namespace and service name
+    tls: false  # Enable TLS by default with edge terminationl
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  # Additional volumes on the output Deployment definition.
+  volumes: 
+  - name: app-config
+    configMap:
+      defaultMode: 420
+      name: image-upload-frontend-spa-app-config
+
+  # Additional volumeMounts on the output Deployment definition.
+  volumeMounts:
+  - name: app-config
+    mountPath: "/usr/share/nginx/html/config.js"
+    subPath: config.js
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}

@@ -1,0 +1,38 @@
+{{- if not .Values.isLinting  }}
+{{- if .Values.frontend.ingress.enabled -}}
+{{- $route := lookup "route.openshift.io/v1" "Route" "openshift-console" "console" }}
+{{- $routeName := $route.spec.host }}
+{{- $domain := regexReplaceAll "^console-openshift-console\\." $routeName "" -}}
+
+{{- $fullName := include "image-upload-frontend.frontend.fullname" . -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ $fullName }}
+  labels:
+    domain:  {{ $domain }}
+    {{- include "image-upload-frontend.frontend.labels" . | nindent 4 }}
+  {{- with .Values.frontend.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.frontend.ingress.tls }}
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  {{- end }}
+  {{- if .Values.frontend.ingress.host }}
+  host:  "{{ .Values.frontend.ingress.host }}.{{ $domain }}"
+  {{- else }}
+  host:
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ include "image-upload-frontend.frontend.fullname" . }}
+    weight: 100
+  port:
+    targetPort: http
+  wildcardPolicy: None
+{{- end }}
+{{- end }}
