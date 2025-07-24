@@ -1,0 +1,75 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: main
+    app.openshift.io/vcs-uri: https://github.com/ryanzhang/ocp-serverless
+    openshift.io/generated-by: OpenShiftWebConsole
+  creationTimestamp: "2024-10-17T01:12:18Z"
+  generation: 25
+  labels:
+    app: image-upload-frontend
+    app.kubernetes.io/component: image-upload-frontend
+    app.kubernetes.io/instance: image-upload-frontend
+    app.kubernetes.io/name: image-upload-frontend
+    app.kubernetes.io/part-of: image-uploader
+    app.openshift.io/runtime: nodejs
+    app.openshift.io/runtime-version: 20-ubi8
+  name: image-upload-frontend
+  namespace: image-upload-frontend
+  resourceVersion: "4782302"
+  uid: 0b4a3cf2-2e53-418d-ac8e-181a7d458fce
+spec:
+  failedBuildsHistoryLimit: 5
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: image-upload-frontend:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    contextDir: /deployment/frontend
+    git:
+      ref: main
+      uri: https://gitlab.galaxy.io/ryanzhang-appdev/ocp-serverless
+    sourceSecret:
+      name: build-secret
+    type: Git
+  strategy:
+    dockerStrategy:
+      dockerfilePath: Containerfile
+      env:
+      - name: http_proxy
+        value: 192.168.2.15:3128
+      - name: https_proxy
+        value: 192.168.2.15:3128
+      - name: no_proxy
+        value: localhost,127.0.0.1,10.128.0.0/14,172.30.0.0/16,.cluster.local,.svc,.svc.cluster.local,kubernetes.default.svc,api.ocp3.local,mirrors.cloud.tencent.com
+      from:
+        kind: ImageStreamTag
+        name: nodejs:20-ubi8
+        namespace: openshift
+    type: Docker
+  successfulBuildsHistoryLimit: 5
+  triggers:
+  - generic:
+      secretReference:
+        name: image-upload-frontend-generic-webhook-secret
+    type: Generic
+  - github:
+      secretReference:
+        name: image-upload-frontend-github-webhook-secret
+    type: GitHub
+  - imageChange: {}
+    type: ImageChange
+  - type: ConfigChange
+status:
+  imageChangeTriggers:
+  - from:
+      name: nodejs:20-ubi8
+      namespace: openshift
+    lastTriggerTime: null
+    lastTriggeredImageID: image-registry.openshift-image-registry.svc:5000/openshift/nodejs@sha256:910cace7147d771dff139cf0f4d5022ec64083b2dfcfa7c54a1ee000abc5fe69
+  lastVersion: 12
